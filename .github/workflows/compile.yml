@@ -5,18 +5,19 @@ on: [push, workflow_dispatch]
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: slimboot/msp430-gcc:latest  # Gotowe środowisko z kompilatorem
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Toolchain
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-msp430 binutils-msp430 msp430-libc
-
       - name: Build Project
         run: |
-          msp430-elf-gcc -mmcu=msp430fr5739 -O2 -o main.elf AgNP04b-main.c
+          # Kompilacja do formatu ELF
+          msp430-elf-gcc -mmcu=msp430fr5739 -O2 -g -o main.elf AgNP04b-main.c
+          
+          # Konwersja do formatu Intel HEX (wymaganego przez PCBWay)
           msp430-elf-objcopy -O ihex main.elf main.hex
 
       - name: Upload Result
