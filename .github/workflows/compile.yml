@@ -5,19 +5,25 @@ on: [push, workflow_dispatch]
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: slimboot/msp430-gcc:latest  # Gotowe środowisko z kompilatorem
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install MSP430 GCC
+        uses: carlosperate/arm-none-eabi-gcc-action@v1 # Ta akcja pozwala też na instalację innych narzędzi, ale spróbujmy prościej:
+        with:
+          release: 'latest'
+
+      - name: Install Toolchain via APT (Retry)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-msp430 binutils-msp430 msp430-libc
+
       - name: Build Project
         run: |
-          # Kompilacja do formatu ELF
+          # Kompilacja do ELF
           msp430-elf-gcc -mmcu=msp430fr5739 -O2 -g -o main.elf AgNP04b-main.c
-          
-          # Konwersja do formatu Intel HEX (wymaganego przez PCBWay)
+          # Konwersja do HEX
           msp430-elf-objcopy -O ihex main.elf main.hex
 
       - name: Upload Result
